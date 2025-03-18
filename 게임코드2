@@ -1,0 +1,289 @@
+import random
+
+# 플레이어 클래스
+class Player:
+    def __init__(self, name):
+        self.name = name
+        self.health = 100
+        self.attack = 20
+        self.defense = 10
+        self.coins = 0
+        self.items = []
+
+    def show_stats(self):
+        print("\n📜 [플레이어 능력치]")
+        print(f"❤️ 체력: {self.health}")
+        print(f"⚔️ 공격력: {self.attack}")
+        print(f"🛡️ 방어력: {self.defense}")
+        print(f"💰 재화: {self.coins}원")
+        print(f"🎒 보유 아이템: {self.items if self.items else '없음'}\n")
+
+    def attack_monster(self, monster):
+        damage = self.attack
+        monster.health -= damage
+        print(f"⚔️ 플레이어의 공격! 몬스터에게 {damage}만큼 데미지 주었음. 몬스터 체력: {monster.health}")
+
+    def heal(self):
+        self.health = 100
+        print("🍀 체력이 가득 차서 완전히 회복했습니다!")
+
+    def buy_item(self, item):
+        self.items.append(item)
+        print(f"🛍️ {item.name}을(를) 구매했습니다!")
+
+    def lose_stats_on_death(self):
+        self.attack = max(5, self.attack - 5)
+        self.defense = max(5, self.defense - 3)
+        print("⚠️ 능력치가 일부 감소했습니다! 공격력과 방어력이 줄어들었습니다.")
+
+# 몬스터 클래스
+class Monster:
+    def __init__(self, name, health, attack, grade):
+        self.name = name
+        self.health = health
+        self.attack = attack
+        self.grade = grade
+        self.coins = self.calculate_coins()
+
+    def calculate_coins(self):
+        if self.grade == "일반":
+            return random.randint(1, 3)
+        elif self.grade == "레어":
+            return random.randint(4, 7)
+        else:  # 보스
+            return random.randint(8, 15)
+
+    def show_stats(self):
+        print(f"👹 몬스터 이름: {self.name}")
+        print(f"등급: {self.grade}")
+        print(f"❤️ 체력: {self.health}")
+        print(f"⚔️ 공격력: {self.attack}")
+        print(f"💰 주는 재화: {self.coins}원")
+
+    def attack_player(self, player):
+        damage = self.attack
+        player.health -= damage
+        print(f"💥 몬스터의 공격! {damage}만큼 데미지 받음. 체력: {player.health}")
+
+    def drop_item(self):
+        drop_chance = random.random()
+        if self.grade == "보스" and drop_chance < 0.7:  # 보스는 높은 확률로 전설 아이템을 드랍
+            return random.choice(legendary_items)
+        elif self.grade == "레어" and drop_chance < 0.5:  # 레어 몬스터는 확률 50%로 에픽 아이템을 드랍
+            return random.choice(epic_items)
+        elif self.grade == "일반" and drop_chance < 0.3:  # 일반 몬스터는 확률 30%로 노말 아이템을 드랍
+            return random.choice(normal_items)
+        return None  # 아무것도 드랍하지 않음
+
+# 아이템 클래스
+class Item:
+    def __init__(self, name, grade, effect):
+        self.name = name
+        self.grade = grade
+        self.effect = effect
+
+    def __repr__(self):
+        return f"{self.name} ({self.grade})"
+
+# 아이템 생성
+normal_items = [
+    Item("슬기로운 철검", "노말", "공격력 5 증가"),
+    Item("튼튼한 방패", "노말", "방어력 5 증가"),
+    Item("건강한 물약", "노말", "체력 20 회복"),
+    Item("단단한 갑옷", "노말", "방어력 7 증가"),
+    Item("상급 체력 물약", "노말", "체력 40 회복"),
+    Item("불사의 물약", "노말", "체력 100 회복"),
+    Item("마력의 검", "노말", "공격력 10 증가"),
+]
+
+epic_items = [
+    Item("마법의 철검", "에픽", "공격력 10 증가"),
+    Item("불사의 방패", "에픽", "방어력 10 증가"),
+    Item("회복의 물약", "에픽", "체력 50 회복"),
+    Item("어둠의 방패", "에픽", "방어력 12 증가"),
+    Item("치명적인 검", "에픽", "공격력 15 증가"),
+    Item("대마법사의 물약", "에픽", "체력 80 회복"),
+    Item("불사신의 검", "에픽", "공격력 20 증가"),
+]
+
+legendary_items = [
+    Item("천상의 검", "전설", "공격력 20 증가"),
+    Item("불멸의 방패", "전설", "방어력 20 증가"),
+    Item("엘릭서", "전설", "체력 100 회복"),
+    Item("신의 검", "전설", "공격력 30 증가"),
+    Item("불사의 방패", "전설", "방어력 30 증가"),
+    Item("천상의 물약", "전설", "체력 150 회복"),
+    Item("영원의 검", "전설", "공격력 40 증가"),
+]
+
+# 제련소 클래스 (아이템 합성 기능 추가)
+class Refinery:
+    def __init__(self):
+        self.available_items = []  # 제련소에 있는 아이템 목록
+
+    # 제련소에 아이템 추가
+    def add_item(self, item):
+        self.available_items.append(item)
+
+    # 같은 등급의 아이템 2개를 선택해 합성
+    def refine_items(self, grade):
+        same_grade_items = [item for item in self.available_items if item.grade == grade]
+        
+        # 같은 등급 아이템이 2개 이상 있는지 확인
+        if len(same_grade_items) < 2:
+            print(f"같은 등급의 아이템이 부족합니다. {grade} 등급 아이템을 두 개 이상 소지해야 합성이 가능합니다.")
+            return None
+        
+        # 두 개 아이템 선택
+        item1, item2 = random.sample(same_grade_items, 2)
+
+        # 선택한 아이템을 합성
+        self.available_items.remove(item1)
+        self.available_items.remove(item2)
+
+        # 상위 등급 아이템 랜덤 생성 (예: 노말 -> 에픽, 에픽 -> 전설)
+        new_item = self.create_random_item(grade)
+        
+        # 새로 생성된 아이템을 제련소에 추가
+        self.add_item(new_item)
+
+        print(f"합성 완료! '{item1.name}'과 '{item2.name}'이 합쳐져 '{new_item.name}' 아이템이 생성되었습니다.")
+        return new_item
+    
+    # 상위 등급 아이템 랜덤 생성
+    def create_random_item(self, grade):
+        if grade == "노말":
+            return self.random_upgrade("에픽")
+        elif grade == "에픽":
+            return self.random_upgrade("전설")
+        elif grade == "전설":
+            print("전설 등급 아이템은 더 이상 업그레이드할 수 없습니다.")
+            return None
+
+    # 상위 등급 아이템 랜덤 생성
+    def random_upgrade(self, new_grade):
+        if new_grade == "에픽":
+            return random.choice(epic_items)
+        elif new_grade == "전설":
+            return random.choice(legendary_items)
+
+# 🎲 홀짝 게임
+def dice_game():
+    print("🎲 홀짝 게임! (주사위 굴리기)")
+    guess = input("홀(h) 또는 짝(e) 선택: ").lower()
+    roll = random.randint(1, 6)
+    print(f"🎲 주사위 결과: {roll}")
+    return (roll % 2 == 0 and guess == 'e') or (roll % 2 == 1 and guess == 'h')
+
+# ✊✋✌️ 가위바위보 게임
+def rock_paper_scissors():
+    print("✊✋✌️ 가위바위보 게임!")
+    choices = ["가위", "바위", "보"]
+    player_choice = input("가위, 바위, 보 중 선택: ")
+    monster_choice = random.choice(choices)
+    print(f"👹 몬스터: {monster_choice}")
+
+    if player_choice == monster_choice:
+        print("⚖️ 무승부! 다시 도전!")
+        return rock_paper_scissors()
+    elif (player_choice == "가위" and monster_choice == "보") or \
+         (player_choice == "바위" and monster_choice == "가위") or \
+         (player_choice == "보" and monster_choice == "바위"):
+        return True
+    else:
+        return False
+
+# 🏹 전투 시스템
+def battle(player, monster):
+    print("\n⚔️ 몬스터와의 전투 시작!")
+
+    mini_games = [
+        dice_game, rock_paper_scissors
+    ]
+
+    while monster.health > 0:
+        print("\n🔥 미니게임 도전!")
+        game = random.choice(mini_games)
+
+        if game():  # 미니게임에서 승리 시
+            print("🎉 승리! 몬스터에게 공격 성공!")
+            player.attack_monster(monster)
+        else:  # 미니게임에서 패배 시
+            print("💥 패배! 몬스터의 공격!")
+            monster.attack_player(player)
+
+        if player.health <= 0:
+            print("💀 플레이어가 사망했습니다...")
+            player.lose_stats_on_death()
+            return False  # 게임 종료
+
+    print(f"🎊 몬스터 처치 완료! +{monster.coins} 재화 획득!")
+    player.coins += monster.coins
+
+    # 몬스터 드랍 아이템 (몬스터 등급에 따라 드랍 확률 다르게 설정)
+    drop_item = monster.drop_item()
+    if drop_item:
+        print(f"🎁 {monster.name}이(가) '{drop_item.name}' 아이템을 드랍했습니다!")
+        player.buy_item(drop_item)
+
+    # 전투 끝난 후 엔터를 누를 때까지 기다림
+    input("전투가 끝났습니다. 다음으로 넘어가려면 Enter를 누르세요...")
+
+    return True  # 몬스터 처치 후 전투 종료
+
+# 🏰 던전 탐험
+def dungeon(player):
+    refinery = Refinery()
+    while player.health > 0:
+        print("\n🔍 던전 탐험 중...")
+        event = random.choices(["monster", "shop", "rest", "trap", "refinery"], [0.5, 0.2, 0.2, 0.1, 0.1])[0]
+        
+        if event == "monster":
+            monster_name = random.choice(["악몽의 괴물", "지옥의 사자", "구름의 마왕", "불사의 괴물", "어둠의 지배자"])
+            grade = random.choice(["일반", "레어", "보스"])
+            if grade == "일반":
+                monster = Monster(monster_name, health=30, attack=5, grade="일반")
+            elif grade == "레어":
+                monster = Monster(monster_name, health=50, attack=10, grade="레어")
+            else:  # 보스
+                monster = Monster(monster_name, health=100, attack=20, grade="보스")
+
+            monster.show_stats()
+            if not battle(player, monster):
+                restart = input("게임이 종료되었습니다. 다시 시작하시겠습니까? (y/n): ").lower()
+                if restart == "y":
+                    player.health = 100
+                    continue
+                else:
+                    break
+        elif event == "shop":
+            print("\n🛒 상점을 발견했습니다!")
+            shop_items = normal_items + epic_items + legendary_items
+            print("상점 아이템:", [item.name for item in shop_items])
+            item_choice = input("아이템을 구매하시겠습니까? (y/n): ").lower()
+            if item_choice == "y":
+                item = random.choice(shop_items)
+                player.buy_item(item)
+        elif event == "rest":
+            print("\n💤 쉼터에서 휴식을 취합니다.")
+            player.heal()
+        elif event == "trap":
+            print("\n⚠️ 함정에 빠졌습니다! 체력 20 감소!")
+            player.health -= 20
+        elif event == "refinery":
+            print("\n🛠️ 제련소에 도착했습니다. 아이템 합성!")
+            item_grade = input("합성할 아이템 등급을 입력하세요 (노말, 에픽, 전설): ").lower()
+            new_item = refinery.refine_items(item_grade.capitalize())
+            if new_item:
+                print(f"제련소에서 합성된 아이템: {new_item.name}")
+
+# 게임 시작
+def main():
+    print("⚔️ 던전 모험 게임 시작!")
+    player_name = input("플레이어 이름을 입력하세요: ")
+    player = Player(player_name)
+    
+    dungeon(player)  # 던전 탐험 시작
+
+if __name__ == "__main__":
+    main()
